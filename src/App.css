@@ -24,9 +24,12 @@ body {
     background-color: rgba(255, 255, 255, 0.85);
 }
 
-.calculator-grid > button:hover, .calculator-grid > button:focus{
+.calculator-grid > button:hover{
     background-color: rgba(0, 0, 0, 0.8);
     color: white;
+}
+.calculator-grid > button:focus{
+    /*I want it to do some kind of effect to show that it has been clikced.*/
 }
 
 .span-two{
