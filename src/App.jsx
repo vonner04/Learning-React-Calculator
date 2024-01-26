@@ -33,13 +33,16 @@ function reducer(state, { type, payload }) {
       };
 
     case ACTIONS.CHOOSE_OPERATION:
-      //Do nothing if there is no current operand
-      if (state.currentOperand == null && state.previousOperand == null) {
+      //Do nothing if there is no previous operand and current operand.
+      if (
+        (state.currentOperand == null && state.previousOperand == null) ||
+        state.currentOperand == null
+      ) {
         return state;
       }
 
       //Update operation if there is no previous operand
-      if (state.previousOperand == null && state.currentOperand != null) {
+      if (state.previousOperand == null) {
         return {
           ...state,
           operation: payload.operation,
@@ -58,10 +61,47 @@ function reducer(state, { type, payload }) {
 
     case ACTIONS.CLEAR:
       return {};
+
+    case ACTIONS.DELETE_DIGIT:
+
+    case ACTIONS.COMPUTE:
+      //Do nothing if there is no current operand or operation
+      if (state.currentOperand == null || state.operation == null) {
+        return state;
+      }
+      return {
+        ...state,
+        currentOperand: evaluate(state),
+        previousOperand: null,
+        operation: null,
+      };
   }
 }
 
-function evaluate({ currentOperand, previousOperand, operation }) {}
+function evaluate({ currentOperand, previousOperand, operation }) {
+  //Turn strings into numbers
+  const current = parseFloat(currentOperand);
+  const previous = parseFloat(previousOperand);
+  if (isNaN(current) || isNaN(previous)) return "";
+
+  let computation = "";
+  //Determine operation
+  switch (operation) {
+    case "+":
+      computation = previous + current;
+      break;
+    case "-":
+      computation = previous - current;
+      break;
+    case "*":
+      computation = previous * current;
+      break;
+    case "÷":
+      computation = previous / current;
+      break;
+  }
+  return computation.toString();
+}
 
 export default function App() {
   const [{ currentOperand, previousOperand, operation }, dispatch] = useReducer(
@@ -101,7 +141,12 @@ export default function App() {
       <OperationButton operation="-" dispatch={dispatch}></OperationButton>
       <DigitButton digit="." dispatch={dispatch}></DigitButton>
       <DigitButton digit="0" dispatch={dispatch}></DigitButton>
-      <button className="span-two">=</button>
+      <button
+        className="span-two"
+        onClick={() => dispatch({ type: ACTIONS.COMPUTE })}
+      >
+        =
+      </button>
     </div>
   );
 }
