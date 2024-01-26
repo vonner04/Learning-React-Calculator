@@ -14,6 +14,15 @@ export const ACTIONS = {
 function reducer(state, { type, payload }) {
   switch (type) {
     case ACTIONS.ADD_DIGIT:
+      //Overwrite current operand if compute was just pressed.
+      if (state.overwrite === true) {
+        return {
+          ...state,
+          overwrite: false,
+          currentOperand: payload.digit,
+        };
+      }
+
       //Prevent trailing zeroes.
       if (state.currentOperand === "0" && payload.digit === "0") return state;
 
@@ -63,19 +72,49 @@ function reducer(state, { type, payload }) {
       return {};
 
     case ACTIONS.DELETE_DIGIT:
+      //After compute, clear the screen and prevent addition of more digits
+      if (state.overwrite === true) {
+        return {
+          ...state,
+          overwrite: false,
+          currentOperand: null,
+        };
+      }
+
+      //Do nothing if there is no current operand
+      if (state.currentOperand == null) return state;
+
+      //Delete last digit
+      return {
+        ...state,
+        currentOperand: state.currentOperand.slice(0, -1),
+      };
 
     case ACTIONS.COMPUTE:
       //Do nothing if there is no current operand or operation
       if (state.currentOperand == null || state.operation == null) {
         return state;
       }
+      //Show result in the screen and prevent addition of more digits to
       return {
         ...state,
+        overwrite: true,
         currentOperand: evaluate(state),
         previousOperand: null,
         operation: null,
       };
   }
+}
+
+const INTEGER_FORMATTER = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
+
+function formatOperand(operand) {
+  if (operand == null) return "";
+  const [integer, decimal] = operand.split(".");
+  if (decimal == null) return INTEGER_FORMATTER.format(integer);
+  return `${INTEGER_FORMATTER.format(integer)}.${decimal}`;
 }
 
 function evaluate({ currentOperand, previousOperand, operation }) {
@@ -113,9 +152,9 @@ export default function App() {
     <div className="calculator-grid">
       <div className="output">
         <div className="previous-operand">
-          {previousOperand} {operation}
+          {formatOperand(previousOperand)} {operation}
         </div>
-        <div className="current-operand">{currentOperand}</div>
+        <div className="current-operand">{formatOperand(currentOperand)}</div>
       </div>
       <button
         className="span-two"
